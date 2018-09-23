@@ -1,11 +1,13 @@
 import telegram
+from stock_crawler_for_bot import stockinfo
 from datetime import datetime
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-my_token = '492877807:AAEcHwvVyI8Sc9Bj31izc_cBanq0v4BZq24'
+
+my_token = ''
 chatbot = telegram.Bot(token=my_token)
-chat_id = '68008527'
+chat_id = ''
 # chat_id = chatbot.getUpdates()[-1].message.chat.id
 updater = Updater(my_token)
 
@@ -18,10 +20,20 @@ chatbot.sendMessage(chat_id=chat_id, text='Telegrambot is Ready')
 def get_message(bot, update):
     update.message.reply_text('got Text')  # 'got text'를 답장
     update.message.reply_text(update.message.text)  # 받은 메시지를 답장
-
+    data = stockinfo(update.message.text)
+    text = "\n".join(data)
+    bot.sendMessage(chat_id, text)
 
 def help_command(bot, update):
     update.message.reply_text("무엇을 도와드릴까요?")
+
+def stock_command(bot, update):
+    update.message.reply_text("검색하고자 하는 주식명을 입력해주세요")
+    i = bot.sendMessage(chat_id, msg['text'])
+    stockinfo(i)
+    text = "\n".join(info)
+    bot.sendMessage(chat_id, text)
+
 
 
 def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
@@ -84,6 +96,9 @@ updater.dispatcher.add_handler(help_handler)
 get_handler = CommandHandler('get', get_command)
 updater.dispatcher.add_handler(get_handler)
 updater.dispatcher.add_handler(CallbackQueryHandler(callback_get))
+
+stock_handler = CommandHandler('stock', stock_command)
+updater.dispatcher.add_handler(stock_handler)
 
 updater.start_polling(timeout=3, clean=True)  # polling 시작
 updater.idle()  # updater가 종료되지 않고 계속 실행되고 있도록
