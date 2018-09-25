@@ -1,40 +1,27 @@
 import telegram
 from stock_crawler_for_bot import stockinfo
 from datetime import datetime
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, ConversationHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-
-my_token = ''
-chatbot = telegram.Bot(token=my_token)
-chat_id = ''
 # chat_id = chatbot.getUpdates()[-1].message.chat.id
-updater = Updater(my_token)
 
-now = datetime.now()
-
-print('starting telegram bot')
-chatbot.sendMessage(chat_id=chat_id, text='Telegrambot is Ready')
-
-
-def get_message(bot, update):
-    update.message.reply_text('got Text')  # 'got text'를 답장
-    update.message.reply_text(update.message.text)  # 받은 메시지를 답장
-    data = stockinfo(update.message.text)
-    text = "\n".join(data)
-    bot.sendMessage(chat_id, text)
+#def get_message(bot, update):
+#    update.message.reply_text('got Text')  # 'got text'를 답장
+#    update.message.reply_text(update.message.text)  # 받은 메시지를 답장
+#    data = stockinfo(update.message.text)
+#    text = "\n".join(data)
+#    bot.sendMessage(chat_id, text)
 
 def help_command(bot, update):
     update.message.reply_text("무엇을 도와드릴까요?")
 
-def stock_command(bot, update):
-    update.message.reply_text("검색하고자 하는 주식명을 입력해주세요")
-    i = bot.sendMessage(chat_id, msg['text'])
-    stockinfo(i)
-    text = "\n".join(info)
-    bot.sendMessage(chat_id, text)
-
-
+#def stock_command(bot, update):
+#    update.message.reply_text("검색하고자 하는 주식명을 입력해주세요")
+#    i = bot.sendMessage(chat_id, msg['text'])
+#    stockinfo(i)
+#    text = "\n".join(info)
+#    bot.sendMessage(chat_id, text)
 
 def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
     menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
@@ -84,21 +71,83 @@ def callback_get(bot, update):
                               chat_id=update.callback_query.message.chat_id,
                               message_id=update.callback_query.message.message_id)
 
+def stock(bot, update):
+#    user = update.message.from_user
+    update.message.reply_text(
+        '안녕하세요! 주식 검색 봇입니다!'
+        '/cancel을 입력하시면 사용을 중단합니다.\n\n'
+        '검색을 원하시는 주식의 이름을 입력해주세요')
 
-updater = Updater(my_token)  # my_token에 업데이트된 사항이있으면 가져옴
+    return STOCK
 
-message_handler = MessageHandler(Filters.text, get_message)  # 텍스트에 반응하여 get_message 함수를 호출
-updater.dispatcher.add_handler(message_handler)  # updater에 message_handler를 더해줌
+def stock_search(bot, update):
+    update.message.reply_text('검색하신 주식의 정보는 다음과 같습니다.')
+    user = update.message.from_user
+    answer = update.message.text
+    print('searching')
+    data = stockinfo(answer)
+    text = "\n".join(data)
+    update.message.reply_text(text)
+    update.message.reply_text('이용해주셔서 감사합니다.')
+    return ConversationHandler.END
 
-help_handler = CommandHandler('help', help_command)  # help 명령에 반응하여 help_command 함수를 호출
-updater.dispatcher.add_handler(help_handler)
+def cancel(bot, update):
+    user = update.message.from_user
+    #logger.info("User %s canceled the conversation.", user.first_name)
+    update.message.reply_text('Bye! I hope we can talk again some day.',
+                              reply_markup=ReplyKeyboardRemove())
 
-get_handler = CommandHandler('get', get_command)
-updater.dispatcher.add_handler(get_handler)
-updater.dispatcher.add_handler(CallbackQueryHandler(callback_get))
+    return ConversationHandler.END
 
-stock_handler = CommandHandler('stock', stock_command)
-updater.dispatcher.add_handler(stock_handler)
 
-updater.start_polling(timeout=3, clean=True)  # polling 시작
-updater.idle()  # updater가 종료되지 않고 계속 실행되고 있도록
+def error(bot, update, error):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, error)
+
+STOCK = range(0)
+
+def main() :
+    updater = Updater("492877807:AAEcHwvVyI8Sc9Bj31izc_cBanq0v4BZq24")
+    my_token = '492877807:AAEcHwvVyI8Sc9Bj31izc_cBanq0v4BZq24'
+    chatbot = telegram.Bot(token=my_token)
+    chat_id = '68008527'
+
+    now = datetime.now()
+
+    dp = updater.dispatcher
+
+#    message_handler = MessageHandler(Filters.text, get_message)  # 텍스트에 반응하여 get_message 함수를 호출
+#    updater.dispatcher.add_handler(message_handler)  # updater에 message_handler를 더해줌
+
+    help_handler = CommandHandler('help', help_command)  # help 명령에 반응하여 help_command 함수를 호출
+    updater.dispatcher.add_handler(help_handler)
+
+    get_handler = CommandHandler('get', get_command)
+    updater.dispatcher.add_handler(get_handler)
+    updater.dispatcher.add_handler(CallbackQueryHandler(callback_get))
+
+    #stock_handler = CommandHandler('stock', stock_command)
+    #updater.dispatcher.add_handler(stock_handler)
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('stock', stock)],
+
+        states={
+            STOCK: [MessageHandler(Filters.text, stock_search)]
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    dp.add_handler(conv_handler)
+    dp.add_error_handler(error)
+
+    chatbot.sendMessage(chat_id=chat_id, text='텔레그램봇이 준비되었습니다. /stock으로 주식 검색을 시작하세요')
+    print('Bot is ready.')
+    updater.start_polling()  # polling 시작
+    updater.idle()  # updater가 종료되지 않고 계속 실행되고 있도록
+
+
+if __name__ == '__main__':
+    main()
+
