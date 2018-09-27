@@ -1,5 +1,6 @@
 import telegram
 from stock_crawler_for_bot import stockinfo
+from currency_crawler_for_bot import currency_get
 from datetime import datetime
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, ConversationHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -39,15 +40,18 @@ def build_button(text_list, callback_header=""):  # make button list
     return button_list
 
 
-def get_command(bot, update):
-    print("get")
-    button_list = build_button(["on", "off", "cancel"])  # make button list
+# 환율 검색 모듈
+
+
+def currency_command(bot, update):
+    update.message.reply_text('환율 검색 엔진입니다. 환율 정보를 받아오는 중이니 잠시만 기다려주세요.')
+    button_list = build_button(["전체", "미국 USD", "유럽연합 EUR", "일본 JPY (100엔)", "cancel"])  # make button list
     show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))  # make markup
     update.message.reply_text("원하는 값을 선택하세요", reply_markup=show_markup)  # reply text with markup
 
-
 def callback_get(bot, update):
     data_selected = update.callback_query.data
+    get_data = currency_get()
     print("callback : ", data_selected)
     if data_selected.find("cancel") != -1:
         bot.edit_message_text(text="취소하였습니다.",
@@ -56,18 +60,28 @@ def callback_get(bot, update):
         return
 
     if len(data_selected.split(",")) == 1:
-        button_list = build_button(["1", "2", "3", "cancel"], data_selected)
-        show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))
-        bot.edit_message_text(text="상태를 선택해 주세요.",
-                              chat_id=update.callback_query.message.chat_id,
-                              message_id=update.callback_query.message.message_id,
-                              reply_markup=show_markup)
-
-    elif len(data_selected.split(",")) == 2:
-        bot.edit_message_text(text="{}이(가) 선택되었습니다".format(update.callback_query.data),
+        data = get_data.get(data_selected)
+        bot.edit_message_text(text='검색하신 ' + data_selected + '의 환율은 ' + data + '원입니다.',
                               chat_id=update.callback_query.message.chat_id,
                               message_id=update.callback_query.message.message_id)
+        print(data)
 
+
+#        button_list = build_button(["1", "2", "3", "cancel"], data_selected)
+ #       show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))
+  #      bot.edit_message_text(text="상태를 선택해 주세요.",
+   #                           chat_id=update.callback_query.message.chat_id,
+    #                          message_id=update.callback_query.message.message_id,
+     #                         reply_markup=show_markup)
+
+    #elif len(data_selected.split(",")) == 2:
+     #   bot.edit_message_text(text="{}이(가) 선택되었습니다".format(update.callback_query.data),
+      #                        chat_id=update.callback_query.message.chat_id,
+       #                       message_id=update.callback_query.message.message_id)
+
+
+
+# 주식 검색 모듈
 
 def stock(bot, update):
     #    user = update.message.from_user
@@ -118,18 +132,9 @@ def main():
 
     dp = updater.dispatcher
 
-    #    message_handler = MessageHandler(Filters.text, get_message)  # 텍스트에 반응하여 get_message 함수를 호출
-    #    updater.dispatcher.add_handler(message_handler)  # updater에 message_handler를 더해줌
-
-    help_handler = CommandHandler('help', help_command)  # help 명령에 반응하여 help_command 함수를 호출
-    updater.dispatcher.add_handler(help_handler)
-
-    get_handler = CommandHandler('get', get_command)
-    updater.dispatcher.add_handler(get_handler)
+    currency_handler = CommandHandler('currency', currency_command)
+    updater.dispatcher.add_handler(currency_handler)
     updater.dispatcher.add_handler(CallbackQueryHandler(callback_get))
-
-    # stock_handler = CommandHandler('stock', stock_command)
-    # updater.dispatcher.add_handler(stock_handler)
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('stock', stock)],
