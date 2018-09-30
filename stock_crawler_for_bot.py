@@ -1,6 +1,7 @@
 import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
+import requests
 
 code_df = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13', header=0)[0]
 
@@ -35,16 +36,35 @@ def get_url_2(item_name, code_df):
 
 # 'class'속성값이 'num'인 'b' 태그를 모두 찾는다.
 def stockinfo(item_name):
-    #print('조회를 원하는 주식의 이름을 넣어주세요')
     info = []
-    url1 = get_url_1(item_name, code_df)
     url2 = get_url_2(item_name, code_df)
+
+    r = requests.get(url2)
+    soup =BeautifulSoup(r.text, 'lxml')
+    items = soup.find_all('td', 'num')
+    day_get = soup.find('dd', 'header-table-cell unit')
+    day = day_get.find('p')
+
+    today = day.get_text()
+    stock_value = items[0].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 주가, 전일대비, 수익률
+    stock_value_list = ['주가', '전일대비', '수익률']
+    stock_52 = items[1].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 52주 최고/최저
+    stock_52_list = ['52주 최고가', '52주 최저가']
+    stock_amount = items[3].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 거래량 / 거래대금
+    stock_amount_list = ['거래량', '거래대금']
+    for i in range(len(stock_value_list)):
+        info.append(stock_value_list[i]  + ' : ' + stock_value[i])
+    for i in range(len(stock_52_list)):
+        info.append(stock_52_list[i] + ' : ' + stock_52[i])
+    for i in range(len(stock_amount_list)):
+        info.append(stock_amount_list[i]  + ' : ' + stock_amount[i])
+
     f = urllib.request.urlopen(url2).read()
     soup = BeautifulSoup(f, 'html.parser')
     print('\n오늘의 ' + str(item_name) + '의 기업정보 \n')
     bs = soup.find_all('b', {'class': 'num'})
     for index, b in enumerate(bs):
         item_list = ['주식코드', 'EPS', 'BPS', 'PER', '업종PER', 'PBR', '현금배당수익률']
-        #print(item_list[index] + ' : ' + b.get_text())
         info.append(item_list[index] + ' : ' + b.get_text())
+
     return info
