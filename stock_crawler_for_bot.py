@@ -46,18 +46,18 @@ def stockinfo(item_name):
     day = day_get.find('p')
 
     today = day.get_text()
-    stock_value = items[0].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 주가, 전일대비, 수익률
-    stock_value_list = ['주가', '전일대비', '수익률']
-    stock_52 = items[1].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 52주 최고/최저
-    stock_52_list = ['52주 최고가', '52주 최저가']
-    stock_amount = items[3].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/') # 거래량 / 거래대금
-    stock_amount_list = ['거래량', '거래대금']
-    for i in range(len(stock_value_list)):
-        info.append(stock_value_list[i]  + ' : ' + stock_value[i])
-    for i in range(len(stock_52_list)):
-        info.append(stock_52_list[i] + ' : ' + stock_52[i])
-    for i in range(len(stock_amount_list)):
-        info.append(stock_amount_list[i]  + ' : ' + stock_amount[i])
+    info.append(today + '\n\n')
+    info.append('주식명 : ' + item_name)
+    list = [0, 1, 3]
+    value_list = []
+    tag_list = ['주가', '전일대비', '수익률', '52주 최고가', '52주 최저가', '거래량', '거래대금']
+    for i in list:
+        value = items[i].get_text().strip().replace('\r\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t', '').split('/')
+        for v in value:
+            value_list.append(v)
+    for num in range(0,7):
+        info.append(tag_list[num] + ' : ' + value_list[num])
+    info.append('\n')
 
     f = urllib.request.urlopen(url2).read()
     soup = BeautifulSoup(f, 'html.parser')
@@ -65,6 +65,9 @@ def stockinfo(item_name):
     bs = soup.find_all('b', {'class': 'num'})
     for index, b in enumerate(bs):
         item_list = ['주식코드', 'EPS', 'BPS', 'PER', '업종PER', 'PBR', '현금배당수익률']
-        info.append(item_list[index] + ' : ' + b.get_text())
+        if index == 0:
+            info.insert(2, item_list[index] + ' : ' + b.get_text() + '\n')
+        else :
+            info.append(item_list[index] + ' : ' + b.get_text())
 
     return info
