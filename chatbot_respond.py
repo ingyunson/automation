@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-
+new = []
 
 # chat_id = chatbot.getUpdates()[-1].message.chat.id
 
@@ -60,24 +60,25 @@ def currency_command(bot, update):
             pass
     text = "\n".join(message)
     update.message.reply_text(text)
-    currency_list = ["미국 USD", "유럽연합 EUR", "일본 JPY (100엔)", '중국 CNY', '홍콩 HKD', '대만 TWD', '호주 AUD', '영국 GBP', '캐나다 CAD', '오만 OMR', '스위스 CHF', '스웨덴 SEK', '뉴질랜드 NZD', '체코 CZK', '칠레 CLP', '터키 TRY', '몽골 MNT','이스라엘 ILS', '덴마크 DKK', '노르웨이 NOK', '사우디아라비아 SAR', '쿠웨이트 KWD', '바레인 BHD', '아랍에미리트 AED', '요르단 JOD', '이집트 EGP', '태국 THB', '싱가포르 SGD', '말레이시아 MYR', '인도네시아 IDR 100', '카타르 QAR', '카자흐스탄 KZT', '브루나이 BND', '인도 INR', '파키스탄 PKR', '방글라데시 BDT', '필리핀 PHP', '멕시코 MXN', '브라질 BRL', '베트남 VND 100', '남아프리카 공화국 ZAR', '러시아 RUB', '헝가리 HUF', '폴란드 PLN']
-    new = []
+    currency_list = ["미국 USD", "유럽연합 EUR", "일본 JPY (100엔)", '중국 CNY', '홍콩 HKD', '대만 TWD', '호주 AUD', '영국 GBP', '캐나다 CAD', '스위스 CHF', '스웨덴 SEK', '뉴질랜드 NZD', '체코 CZK', '칠레 CLP', '터키 TRY', '이스라엘 ILS', '덴마크 DKK', '노르웨이 NOK', '사우디아라비아 SAR', '쿠웨이트 KWD', '아랍에미리트 AED', '요르단 JOD', '이집트 EGP', '태국 THB', '싱가포르 SGD', '말레이시아 MYR', '인도네시아 IDR 100', '카타르 QAR', '카자흐스탄 KZT',  '인도 INR', '파키스탄 PKR', '방글라데시 BDT', '필리핀 PHP', '멕시코 MXN', '브라질 BRL', '베트남 VND 100', '남아프리카 공화국 ZAR', '러시아 RUB', '헝가리 HUF', '폴란드 PLN']
     temp_list = []
     idx = 0
     for i in range(len(currency_list)):
+        header = ""
+        if header != "":
+            header += ","
         if idx < 4:
-            temp_list.append(currency_list[i])
+            temp_list.append(InlineKeyboardButton(currency_list[i], callback_data=header + currency_list[i]))
             idx = idx + 1
-            print(temp_list)
         else :
             idx = 0
             new.append(temp_list)
             temp_list = []
-            temp_list.append(currency_list[i])
+            temp_list.append(InlineKeyboardButton(currency_list[i], callback_data=header + currency_list[i]))
             idx = idx + 1
-    button_list = build_button(new)
-    show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))  # make markup
+    show_markup = InlineKeyboardMarkup(new)  # make markup
     update.message.reply_text("원하는 값을 선택하세요", reply_markup=show_markup)  # reply text with markup
+
 
 def callback_get(bot, update):
     data_selected = update.callback_query.data
@@ -91,8 +92,9 @@ def callback_get(bot, update):
 
     if len(data_selected.split(",")) == 1:
         data = get_data.get(data_selected)
-        button_list = build_button(["미국 USD", "유럽연합 EUR", "일본 JPY (100엔)", "cancel"])
-        show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))
+        show_markup = InlineKeyboardMarkup(new)
+        #button_list = build_button(["미국 USD", "유럽연합 EUR", "일본 JPY (100엔)", "cancel"])
+        #show_markup = InlineKeyboardMarkup(build_menu(button_list, len(button_list) - 1))
         bot.edit_message_text(text='검색하신 ' + data_selected + '의 환율은 ' + data + '원입니다.',
                               chat_id=update.callback_query.message.chat_id,
                               message_id=update.callback_query.message.message_id,
@@ -142,10 +144,10 @@ STOCK = range(0)
 
 
 def main():
-    updater = Updater("492877807:AAEcHwvVyI8Sc9Bj31izc_cBanq0v4BZq24")
-    my_token = '492877807:AAEcHwvVyI8Sc9Bj31izc_cBanq0v4BZq24'
+    updater = Updater(<TOKEN>)
+    my_token = <TOKEN>
     chatbot = telegram.Bot(token=my_token)
-    chat_id = '68008527'
+    chat_id = <YOUR_ID>
 
     now = datetime.now()
 
