@@ -5,7 +5,7 @@ import re
 pattern = re.compile(r'\s+')
 
 mother = 'http://www.kocca.kr'
-url = 'http://www.kocca.kr/cop/pims/list.do?menuNo=&category=3&recptSt='
+url = 'http://www.kocca.kr/cop/pims/list.do?menuNo=&recptSt='
 req = requests.get(url)
 html = req.text
 
@@ -13,21 +13,26 @@ soup = bs(html, 'lxml')
 full_list = []
 list_num = len(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr'))
 
-full_list.append(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr > td:nth-of-type(1)')[0])
-full_list.append(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr > td.tal > a')[0])
-full_list.append(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr > td:nth-of-type(3)')[0])
-full_list.append(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr > td:nth-of-type(4)')[0])
-url = full_list[1].get('href')
-
+for i in range(list_num):
+    list = []
+    target = soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr:nth-of-type(' + str(i + 1) + ')')[0]
+    title = target.select('td:nth-of-type(2) > a')[0]
+    for num in range(1, 5):
+        texts = target.select('td:nth-of-type(' + str(num) +')')[0]
+        sentence = re.sub(pattern, '', texts.text)
+        list.append(sentence)
+    list.append(title.get('href'))
+    full_list.append(list)
 
 result = []
-value_list = []
-text_list = ['사업번호', '제목', '등록일', '접수기간']
-for texts in full_list:
-    sentence = re.sub(pattern, '', texts.text)
-    value_list.append(sentence)
-for i in range(4):
-    result.append(text_list[i] + ' : ' + value_list[i])
-result.append('URL : ' + url)
+text_list = ['사업번호', '제목', '등록일', '접수기간', 'URL']
 
-print(result)
+for idx in range(len(full_list)):
+    target = full_list[idx]
+    result.append('INDEX = ' + str(idx))
+    for i in range(4):
+        result.append(text_list[i] + ' : ' + full_list[idx][i])
+    result.append(text_list[4] + ' : ' + mother + full_list[idx][4])
+    result.append('\n')
+
+print('\n'.join(result))
