@@ -123,4 +123,27 @@ def save_zip():
 #save_excel()
 #save_zip()
 
-df = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 재무상태표', index_col=0, skiprows=6)
+finance_state = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 재무상태표', index_col=0, skiprows=6)
+interest = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 손익계산서', index_col=0, skiprows=6)
+cash_flow = pd.read_excel('005930_20170515003806.xls', sheet_name = '현금흐름표', index_col=0, skiprows=7)
+
+
+#url을 파일로 저장
+def wget(url, to=None):
+    local_filename = url.split('/')[-1]
+    if to:
+        local_filename = to
+    r = requests.get(url, stream = True)
+    with open(local_filename, 'wb') as f:
+        for chunk in r.iter_content(chunk_size = 1024):
+            if chunk:
+                f.write(chunk)
+                f.flush()
+    if os.path.getsize(local_filename) <= 0:
+        os.remove(local_filename)
+        return None
+    return local_filename
+
+xls_url = 'http://dart.fss.or.kr/pdf/download/excel.do?rcp_no=20170515003806&dcm_no=5653406&lang=ko'
+
+wget(xls_url, 'DART_삼성전자_1분기_보고서.xls')
