@@ -4,6 +4,7 @@ from pandas.io.json import json_normalize
 import pandas as pd
 import os
 import re
+from datetime import datetime
 
 auth = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 headers={'Referer':'https://dart.fss.or.kr/dsap001/guide.do'}
@@ -19,7 +20,7 @@ def today_announce():
     rc = requests.get(recent, headers = headers)
     today_json = json.loads(rc.text)
     today_result = json_normalize(today_json, 'list')
-    print(today_result)
+    #print(today_result)
 
 
 #특정 회사 공시
@@ -146,4 +147,31 @@ def wget(url, to=None):
 
 xls_url = 'http://dart.fss.or.kr/pdf/download/excel.do?rcp_no=20170515003806&dcm_no=5653406&lang=ko'
 
-wget(xls_url, 'DART_삼성전자_1분기_보고서.xls')
+#지정한 종목 코드의 보고서 가져오기(기간)
+def get_dart_report(code, start_dt = None, end_dt = None):
+    url_tmpl = 'http://dart.fss.or.kr/api/search.json?'\
+               'page_set=100&auth={auth}&crp_cd={code}&start_dt={start_dt}&end_dt={end_dt}&page_no={page_no}'
+    url = url_tmpl.format(auth=auth, code=code, start_dt=start_dt, end_dt=end_dt, page_no=1)
+
+    if start_dt == None:
+        start_dt = datetime.today().strftime('%Y%m%d')
+    if end_dt == None:
+        end_dt = datetime.today().strftime('%Y%m%d')
+
+    r = requests.get(url, headers = headers)
+    jo = json.loads(r.text)
+    df = json_normalize(jo, 'list')
+
+    for page in range(2, jo['total_page'] + 1):
+        url = url_tmpl.format(auth=auth, code=code, start_dt=start_dt, end_dt=end_dt, page_no=page)
+        r = requests.get(url, headers = headers)
+        jo = json.loads(r.text)
+        df = df.append(json_normalize(jo, 'list'))
+
+    cols = {'crp_cd' : '종목코드', 'crp_cls' : '법인구분', 'crp_nm' : '종목명', 'flr_nm' : '제출인', 'rcp_dt' : '접수일', 'rcp_no' : '접수번호', 'rmk' : '비고', 'rpt_nm' : '보고서명'}
+    df.rename(columns = cols, inplace = True)
+    df['접수일'] = pd.to_datetime(df['접수일'])
+    df.set_index('접수일', inplace=True)
+    return df
+
+print(get_dart_report('005930', '20170101', '20170130'))
