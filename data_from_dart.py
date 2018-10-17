@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import re
 from datetime import datetime
+import sqlite3
 
 auth = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 headers={'Referer':'https://dart.fss.or.kr/dsap001/guide.do'}
@@ -12,6 +13,8 @@ headers={'Referer':'https://dart.fss.or.kr/dsap001/guide.do'}
 pdf_link_tmpl = "http://dart.fss.or.kr/pdf/download/pdf.do?rcp_no={rcp_no}&dcm_no={dcm_no}"
 excel_link_tmpl = "http://dart.fss.or.kr/pdf/download/excel.do?rcp_no={rcp_no}&dcm_no={dcm_no}&lang=ko"
 ifrs_link_tmpl = "http://dart.fss.or.kr/pdf/download/ifrs.do?rcp_no={rcp_no}&dcm_no={dcm_no}&lang=ko"
+
+conn = sqlite3.connect('dart.db')
 
 #오늘(혹은 전일) 공시 100건
 def today_announce():
@@ -94,7 +97,7 @@ def get_report_attach_urls(rcp_no):
 
 rcp_no = '20170515003806'
 attach_urls = get_report_attach_urls(rcp_no)
-print(attach_urls)
+
 
 #pdf문서 저장하기
 def save_pdf():
@@ -124,9 +127,9 @@ def save_zip():
 #save_excel()
 #save_zip()
 
-finance_state = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 재무상태표', index_col=0, skiprows=6)
-interest = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 손익계산서', index_col=0, skiprows=6)
-cash_flow = pd.read_excel('005930_20170515003806.xls', sheet_name = '현금흐름표', index_col=0, skiprows=7)
+#finance_state = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 재무상태표', index_col=0, skiprows=6)
+#interest = pd.read_excel('005930_20170515003806.xls', sheet_name = '연결 손익계산서', index_col=0, skiprows=6)
+#cash_flow = pd.read_excel('005930_20170515003806.xls', sheet_name = '현금흐름표', index_col=0, skiprows=7)
 
 
 #url을 파일로 저장
@@ -174,4 +177,24 @@ def get_dart_report(code, start_dt = None, end_dt = None):
     df.set_index('접수일', inplace=True)
     return df
 
-print(get_dart_report('005930', '20170101', '20170130'))
+#SQL로 DB화하기
+def make_db():
+    create_sql = """
+    CREATE TABLE IF NOT EXISTS "stock_dart" (
+      "접수날짜" TIMESTAMP,
+      "종목코드" TEXT,
+      "법인구분" TEXT,
+      "종목명" TEXT,
+      "제출인" TEXT,
+      "접수번호" TEXT,
+      "비고" TEXT,
+      "보고서명" TEXT,
+      UNIQUE("접수번호") ON CONFLICT REPLACE
+    );
+    """
+    return create_sql
+
+
+conn.execute(make_db())
+conn.execute('CREATE INDEX IF NOT EXISTS "ix_stock_dart_date"ON "stock_dart" ("접수일")')
+conn.execute('CREATE INDEX IF NOT EXISTS "ix_stock_Dart_code"ON "stock_dart" ("종목코드")')
