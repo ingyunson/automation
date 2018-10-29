@@ -22,11 +22,26 @@ def get_file(stock_code):
 def open_file(stock_code):
     filename = get_file(stock_code)
     book = openpyxl.load_workbook(filename)
-    sheet = book.worksheets[0]
+    sheet = book.worksheets[1]
     data = []
+    data2 = []
     for row in sheet.rows:
-        data.append([row[0].value, row[9].value])
+        data.append([row[0].value, row[200].value])  # GS
+        # data2.append([row[0].value, row[188].value]) #GG / 자본총계
+    del data[0:3]
+
+    for i in range(len(data)):
+        if data[i][0]:
+            years = data[i][0].year
+            data[i][0] = years
+        else:
+            pass
     print(data)
+    # print(data2)
 
 
 open_file('267290')
+
+
+
+
