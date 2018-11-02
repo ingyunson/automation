@@ -32,6 +32,7 @@ def get_url_2(item_name, code_df):
     print("요청 URL2 = {}".format(url))
     return url
 
+target_stock = []
 
 def stockdata(item_name):
     # print('조회를 원하는 주식의 이름을 넣어주세요')
@@ -57,11 +58,21 @@ def stockdata(item_name):
     PBR = stock_info[5]
     dive = stock_info[6]
 
-    if float(PER) < 10 and float(PBR) < 5 and price > BRS and price < EPS * 10:
-        print('Check this stock')
-    else:
-        print('Not available')
+    try:
+        if float(PER) < 10 and float(PBR) < 5 and price > BRS and price < EPS * 10:
+            target_stock.append(item_name)
+            print(item_name)
+        else:
+            print('Not available')
+    except:
+        print('it has error!')
 
-    return code
+    return target_stock
 
 stockdata('삼성전자')
+
+
+
+for name in code_df.name:
+    stockdata(name)
+    print(target_stock)
