@@ -1,26 +1,31 @@
+# -*- coding: utf-8 -*-
+
+import os
 import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
 import openpyxl
 
-code_df = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13', header=0)[0]
 
-# 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
-code_df.종목코드 = code_df.종목코드.map('{:06d}'.format)
-
-# 우리가 필요한 것은 회사명과 종목코드이기 때문에 필요없는 column들은 제외해준다.
-code_df = code_df[['회사명', '종목코드']]
-
-# 한글로된 컬럼명을 영어로 바꿔준다.
-code_df = code_df.rename(columns={'회사명': 'name', '종목코드': 'code'})
-code_df.head()
+def search(dirname):
+    filenames = os.listdir(dirname)
+    filelist = []
+    for filename in filenames:
+        ext = os.path.splitext(filename)[-1]
+        if ext == '.xlsx':
+            filelist.append(filename)
+    return filelist
 
 
-# 종목 이름을 입력하면 종목에 해당하는 코드를 불러와
-# 네이버 금융(http://finance.naver.com)에 넣어줌
+def get_file(stock_code):
+    file_list = search(r"c:\Users\Seimei\Jupyter") # 경로 수정 필요
+    for s in file_list:
+        if stock_code in s:
+            return s
+
 
 def open_file(stock_code):
-    filename = get_file(stock_code)
+    filename = r'c:\Users\Seimei\Jupyter\\' + get_file(stock_code) # 경로 수정 필요
     book = openpyxl.load_workbook(filename)
     sheet1 = book.worksheets[0]
     sheet2 = book.worksheets[1]
@@ -40,12 +45,29 @@ def open_file(stock_code):
             pass
     return data
 
+code_df = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13', header=0)[0]
+
+# 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
+code_df.종목코드 = code_df.종목코드.map('{:06d}'.format)
+
+# 우리가 필요한 것은 회사명과 종목코드이기 때문에 필요없는 column들은 제외해준다.
+code_df = code_df[['회사명', '종목코드']]
+
+# 한글로된 컬럼명을 영어로 바꿔준다.
+code_df = code_df.rename(columns={'회사명': 'name', '종목코드': 'code'})
+
+
+# 종목 이름을 입력하면 종목에 해당하는 코드를 불러와
+# 네이버 금융(http://finance.naver.com)에 넣어줌
+
+
 def get_url_1(item_name, code_df):
     code = code_df.query("name=='{}'".format(item_name))['code'].to_string(index=False)
     url = 'http://finance.naver.com/item/sise_day.nhn?code={code}'.format(code=code)
 
     print("요청 URL = {}".format(url))
     return url
+
 
 def get_url_2(item_name, code_df):
     code = code_df.query("name=='{}'".format(item_name))['code'].to_string(index=False)
@@ -54,7 +76,8 @@ def get_url_2(item_name, code_df):
     print("요청 URL2 = {}".format(url))
     return url
 
-target_stock = []
+
+#target_stock = []
 
 
 def stockdata(item_name):
@@ -92,10 +115,11 @@ def stockdata(item_name):
     return target_stock
 
 
-for name in code_df.name:
-    stockdata(name)
-    print(target_stock)
+#for name in code_df.name:
+#    stockdata(name)
+#    print(target_stock)
 
+target_stock = ['세이브존I&C', '지역난방공사', '코리아써키트', '한창제지', '에스코넥', '에이티세미콘', '원익테라세미콘', '주성엔지니어링', 'BGF', '한국금융지주', '한일홀딩스', '한전KPS', '현대해상', '화승인더스트리', 'APS홀딩스', '국순당', '베셀', '성우하이텍', '예림당', '참좋은여행', '코위버', '크리스에프앤씨', 'SK텔레콤', '금양', '농심홀딩스', '일진디스플', '티웨이홀딩스', '풍산홀딩스', '한국공항', '바텍', '서플러스글로벌', '시공테크', '에스에프에이', '유니셈', '유티아이', '인탑스', '토비스', '피제이메탈', 'DB하이텍', 'JW홀딩스', '남선알미늄', '디와이파워', '삼성전자', '코오롱글로벌', '한국전자홀딩스', '한전산업', '한화생명', 'SKC 솔믹스', '동진쎄미켐', '메카로', '세원물산', '제이씨현시스템', 'KPX홀딩스', 'SK이노베이션', '대성산업', '현대제철', '나이스정보통신', '다우데이타', '모다이노칩', '에버다임', '이스트아시아홀딩스', '정다운', '파라텍', '한솔시큐어', '메리츠화재', '아주캐피탈', '에이피티씨', '디와이', '새론오토모티브', '쌍용양회공업', '케이씨텍', '현대글로비스', 'HB테크놀러지', 'KNN', '슈피겐코리아', '이엘피', '제이엠티', '파워넷', '한국알콜', 'DRB동일', '동일산업', '미래에셋대우', '미원상사', '에스제이엠', '효성', '매커스', '시스웍', '아이앤씨', '오션브릿지', '이베스트투자증권', '제룡산업']
 stock_code = []
 except_code = []
 stock_name = []
@@ -126,3 +150,4 @@ for code in except_code:
     stock_name.append(name)
 
 print(stock_name)
+
