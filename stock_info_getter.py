@@ -16,7 +16,9 @@ except_code = []
 #### 텔레그램 봇 설정
 my_token = '729504243:AAFQEqyGx_yjOkSEBoNCUToP2KLH0VR-WX4' #botfather로 받은 토큰
 chatbot = telegram.Bot(token = my_token)
-chat_id = '@krx_stock' #채널의 경우 @채널주소
+#chat_id = '@krx_stock' #채널의 경우 @채널주소
+chat_id = chatbot.getUpdates()[-1].message.chat.id
+
 
 
 
@@ -175,10 +177,15 @@ def bot_message():
         PBR = stock_info[5]
         dive = stock_info[6]
 
-        message_list.append('{i}의 정보는 다음과 같습니다.\n주식번호 : {code}\n전일 주가 : {price}원\nEPS : {eps}\nBRS : {brs}\nPER : {per}\n업종 PER : {area_per}\nPBR : {pbr}\n현금배당률 : {dive}\n일별 시세 링크 : {url1}\n기업정보 링크 {url2}'.format(i = i, code = code, price = price, eps = EPS, brs = BRS, per = PER, area_per = area_PER, pbr = PBR, dive = dive, url1 = url1, url2 = url2))
+        message_list.append('{i}\n기업정보 링크 {url2}'.format(i = i, url2 = url2))
 
-    for t in message_list:
-        chatbot.sendMessage(chat_id=chat_id, text= t)
+    t = '\n\n'.join(message_list)
+    chatbot.send_message(chat_id = chat_id, text = t)
+
+        #message_list.append('{i}의 정보는 다음과 같습니다.\n주식번호 : {code}\n전일 주가 : {price}원\nEPS : {eps}\nBRS : {brs}\nPER : {per}\n업종 PER : {area_per}\nPBR : {pbr}\n현금배당률 : {dive}\n일별 시세 링크 : {url1}\n기업정보 링크 {url2}'.format(i = i, code = code, price = price, eps = EPS, brs = BRS, per = PER, area_per = area_PER, pbr = PBR, dive = dive, url1 = url1, url2 = url2))
+
+    #for t in message_list:
+    #    chatbot.sendMessage(chat_id=chat_id, text= t)
 
     return message_list
 
