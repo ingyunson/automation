@@ -14,25 +14,35 @@ def parse(url):
 
 def kocca() :
     kocca_mother = 'http://www.kocca.kr'
-    kocca_url = 'http://www.kocca.kr/cop/pims/list.do?menuNo=&recptSt='
+    kocca_url = 'http://www.kocca.kr/cop/pims/list.do?menuNo=200828&recptSt='
+    kocca = 'http://www.kocca.kr'
     soup = parse(kocca_url)
 
     full_list = []
-    list_num = len(soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr'))
+    list_num = len(soup.select('#frm > div.board_list.mt25 > div.board_list_body > div > div.subject > a'))
 
     try:
         for i in range(list_num):
             list = []
-            target = soup.select('#frm > div.board_list_typea.bd_point.bbn > table > tbody > tr:nth-of-type(' + str(i + 1) + ')')[0]
-            title = target.select('td:nth-of-type(2) > a')[0]
-            for num in range(1, 5):
-                texts = target.select('td:nth-of-type(' + str(num) +')')[0]
-                sentence = re.sub(pattern, '', texts.text)
-                list.append(sentence)
-            list.append(title.get('href'))
+            target = soup.select('#frm > div.board_list.mt25 > div.board_list_body > div')[0]
+            title = target.select('div.subject > a')[0]
+            sub_url = title.get('href')
+            target_url = kocca + sub_url
+
+            target_num = target.select('div:nth-of-type(1)')[0].text
+            target_title = title.text.strip()
+            target_date = target.select('div:nth-of-type(3)')[0].text.strip()
+            target_limit = target.select('div:nth-of-type(4)')[0].text.strip()
+            list.append(target_num)
+            list.append(target_title)
+            list.append(target_date)
+            list.append(target_limit)
+            list.append(target_url)
             full_list.append(list)
+
+
     except:
-        Error = 'Error occurs, please check the URL\nURL : ' + kocca_url + '\n'
+        Error = '에러가 발생했습니다! URL을 확인해주세요.\nURL : ' + kocca_url + '\n'
         return Error
 
     result = []
@@ -42,9 +52,8 @@ def kocca() :
     for idx in range(len(full_list)):
         target = full_list[idx]
         result.append('INDEX = ' + str(idx))
-        for i in range(4):
+        for i in range(5):
             result.append(text_list[i] + ' : ' + target[i])
-        result.append(text_list[4] + ' : ' + kocca_mother + target[4])
         result.append('\n')
     output = '\n'.join(result)
     return output
@@ -110,3 +119,4 @@ def kpipa_give():
 
     return output
 
+kocca()
